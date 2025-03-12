@@ -1,66 +1,57 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+- Existem classes no dominio que irei citar abaixo, mas tambem que nao fazem sentido no DDD, elas violam diversos principios, acessam diretamente repository, nao utilizam o DI, nao tem responsabilidade clara ou fazem muitas coisas de uma vez, etc, o ideal seria uma refatoracao completa para eliminar esse problema, eu acredito que o ideal seria cada uma dessas classes de dominio se tornar um use case de aplicacao, e ai as funcoes dentro dela se tornariam use cases de dominio, utilizando DI e separando claramente as responsabilidades, e tambem evitaria acessar diretamente repositorys na camada de dominio
+- Alem disso os nomes dos arquivos estao genericos como create, update, etc o que torna dificil depois dar a manutencao, e pra corrigir isso no codigo, quando se realiza a importacao, sao realizados alias para os arquivos, o que pode tornar ainda mais complexo, pois podem serem utilizados nomes diferentes para o mesmo arquivo.
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+# app\Domains\Card\Register.php
+Esta classe possui alguns problemas, que também estão presentes no restante do código:
 
-## About Laravel
+- Os nomes dos métodos precisam ser mais informativos. Usar nomes mais semânticos seria melhor.
+- Falta injeção de dependência, o que melhoraria a testabilidade e flexibilidade.
+- Retornar a própria classe, que manipula dados, pode levar a erros. Seria melhor ter um valor de retorno claro.
+- Encapsulamento: E preferivel deixar o codigo encapsulado com private ao inves de protected ate que se faca necessario.
+- Exceções genéricas: A mesma exceção é usada para tudo, com apenas o valor de retorno sendo diferente. Seria ideal criar exceções personalizadas no futuro.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+# app\Domains\Company\Create.php
+Essa classe e estranha, e ela nao e coerente com o nome, ela deveria ser um use case que apenas valida se a criacao da empresa segue os padroes e esta num estado valido para ser criado.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+# app\Domains\Company\Update.php
+Essa classe nao esta fazendo nada
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+# app\Http\Controllers\CardController.php
+No metodo show deveria ser utilizado get ao inves de post, para seguir os padroes rest, e acredito que comentarios sejam redundantes e desnecessarios na maioria das vezes o que pode induzir ao erro, como pode ter sido o meu caso, pelo que eu entendi, o metodo register, e para registrar um cartao, e o comentario erroneamente diz que e pra ativar um cartao, o que nao e a mesma coisa, um cartao pode estar registrado mas inativo.
 
-## Learning Laravel
+# app\UseCases\Params\User\CreateFirstUserParams.php 
+Deveria ser um DTO.
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+# app\UseCases\User\CreateFirstUser.php
+Um use case deveria ter uma unica responsabilidade, e ele tem varias, como gerar token, validar empresa, criar empresa, etc.
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+# app\UseCases\User\show.php
+classe que nao segue diversas boas praticas de codigo, como nome generico, nome de classe, etc
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+# app\Traits\Instancer.php
+Essa trait é uma bomba, é dificil descrever um cenário onde o uso dela seja válido e não vá gerar problemas no futuro, não sei nem como testar isso.
+Se necessário criar objetos, usar factory.
 
-## Laravel Sponsors
+# app\Traits\Logger.php
+Eu nao usaria o logger como uma trait, configuraria direto nas dependencias e so faria o DI dele.
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
+# app\Repositories\BaseRepository.php
+Essa classe é generica e gigante, viola principios de responsabilidade única, retorna array ao inves das entidades corretas, isso acontece pelo fato dela ser generica, e setModel, newInstance, etc são responsabilidades de outra camada, não deveria estar aqui. Alem de ser dificil de testar.
+acredito que nao tem necessidade ter um repository generico, e o melhor a ser feito é trabalhar de forma mais detalhada a necessidade de cada repository. Se não voce irá criar varios franksteins,
+resumindo, pode apagar esse repository e sua interface e trabalhar melhor nos agregados de forma individual.
+caso nao de, adicionar como debito tecnico resolver isso como prioridade.
 
-### Premium Partners
+# app\Policies\BasePolicy.php
+isManagerOrOwnerResource apresenta problemas de logica, a execucao esta errada, alem de outros problemas como validacao, retorno, etc.
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[Many](https://www.many.co.uk)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- **[DevSquad](https://devsquad.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[OP.GG](https://op.gg)**
-- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
-- **[Lendio](https://lendio.com)**
+# app\Repositories\Company\CanUseDocumentNumber.php
+Tem dois arquivos que fazem quase a mesma coisa, e deveria ser um use case, nao estar em um repository.
 
-## Contributing
+# app\Repositories\Interfaces\BaseRepositoryInterface.php
+Acho que vale a pena comentar que interfaces nao devem serem gigantes e genericas dessa forma, e essa interface nao deveria estar junto com os repositorys, deveria estar no dominio.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# app\Repositories\Token\Create.php
+Nao faz sentido existir um repository para criar um token de acesso, isso deveria estar em outra camada, geralmente eu coloco em um AuthService, na camada de aplicacao, mais uma coisa, por que esta procurando o usuario na criacao do token ? Acredito que o ideial ja seria passar a model correta do usuario e entao criar o token
 
-## Code of Conduct
-
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
-
-## Security Vulnerabilities
-
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
-
-## License
-
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# app\Http\Controllers\HealthCheckController.php 
+O comentario esta induzindo ao erro, o metodo e get nao post.
