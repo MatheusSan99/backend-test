@@ -1,5 +1,6 @@
 - Existem classes no dominio que irei citar abaixo, mas tambem que nao fazem sentido no DDD, elas violam diversos principios, acessam diretamente repository, nao utilizam o DI, nao tem responsabilidade clara ou fazem muitas coisas de uma vez, etc, o ideal seria uma refatoracao completa para eliminar esse problema, eu acredito que o ideal seria cada uma dessas classes de dominio se tornar um use case de aplicacao, e ai as funcoes dentro dela se tornariam use cases de dominio, utilizando DI e separando claramente as responsabilidades, e tambem evitaria acessar diretamente repositorys na camada de dominio
-- Alem disso os nomes dos arquivos estao genericos como create, update, etc o que torna dificil depois dar a manutencao, e pra corrigir isso no codigo, quando se realiza a importacao, sao realizados alias para os arquivos, o que pode tornar ainda mais complexo, pois podem serem utilizados nomes diferentes para o mesmo arquivo.
+- Alem disso os nomes dos arquivos estao genericos como create, update, etc o que torna dificil depois dar a manutencao, hoje quando se realiza a importacao, sao realizados alias para os arquivos, o que pode tornar ainda mais complexo, pois podem serem utilizados nomes diferentes para o mesmo arquivo.
+- Rodei os testes e as migrations e funcionaram normalmente
 
 # app\Domains\Card\Register.php
 Esta classe possui alguns problemas, que também estão presentes no restante do código:
